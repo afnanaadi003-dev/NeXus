@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NETFLIX // NEXUS 1000 — Global Cinema Platform</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            black: '#070508',
+                            dark: '#0f0b14',
+                            card: '#16101d',
+                            magenta: '#d946ef',
+                            red: '#e11d48',
+                            yellow: '#eab308',
+                            pink: '#ec4899',
+                            white: '#f8fafc',
+                            border: '#2e1e3b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- jsPDF CDN for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+        body {
+            background-color: #070508;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(217, 70, 239, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(225, 29, 72, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(234, 179, 8, 0.04) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
+
+        .gradient-magenta-red {
+            background: linear-gradient(135deg, #d946ef 0%, #e11d48 100%);
+        }
+
+        .gradient-yellow-pink {
+            background: linear-gradient(135deg, #eab308 0%, #ec4899 100%);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #f8fafc 0%, #d946ef 50%, #eab308 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-glow {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-glow:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(217, 70, 239, 0.3), 0 8px 10px -6px rgba(225, 29, 72, 0.2);
+            border-color: #d946ef;
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070508;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e1e3b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d946ef;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <header class="border-b border-brand-border bg-brand-dark/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+            <div class="p-2.5 gradient-magenta-red rounded-xl text-white shadow-lg shadow-pink-500/20">
+                <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-xl font-black tracking-wider text-gradient font-mono">NETFLIX // NEXUS</h1>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">1000 CINEMA HUB</span>
+                </div>
+                <p class="text-xs text-gray-400">Global Film Intelligence & Pay-Per-Minute Streaming Engine</p>
+            </div>
+        </div>
+
+        <!-- Token Balance & Subscription HUD -->
+        <div class="flex items-center space-x-4 font-mono text-xs">
+            <div class="bg-black/60 border border-brand-border px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                <i data-lucide="coins" class="w-4 h-4 text-amber-400"></i>
+                <span class="text-gray-400">TOKENS:</span>
+                <span id="user-token-balance" class="text-amber-400 font-bold">250 NEX</span>
+                <button onclick="openTokenModal()" class="ml-2 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40">TOP UP</button>
+            </div>
+
+            <div class="hidden sm:flex bg-black/60 border border-brand-border px-3 py-1.5 rounded-lg items-center space-x-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-pink-400"></i>
+                <span class="text-gray-400">TIER:</span>
+                <span id="user-subscription-tier" class="text-pink-400 font-bold">PREMIUM PASS</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <button onclick="openSubscriptionModal()" class="px-3 py-1.5 gradient-magenta-red hover:opacity-90 text-white font-bold text-xs rounded-lg transition flex items-center space-x-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span class="hidden md:inline">SUBSCRIPTION</span>
+            </button>
+
+            <button onclick="downloadSelfCode()" class="px-3 py-1.5 bg-brand-pink/20 hover:bg-brand-pink/30 border border-brand-pink/40 text-brand-pink text-xs rounded-lg transition flex items-center space-x-1.5 font-bold">
+                <i data-lucide="code" class="w-4 h-4"></i>
+                <span class="hidden lg:inline">DOWNLOAD CODE</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-8 max-w-[1800px] mx-auto w-full space-y-6">
+
+        <!-- Search and Multilateral Filters -->
+        <div class="bg-brand-card border border-brand-border rounded-2xl p-5 space-y-4 shadow-xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
+                
+                <!-- Search Input -->
+                <div class="relative lg:col-span-2">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-gray-400"></i>
+                    <input type="text" id="search-input" onkeyup="applyFilters()" placeholder="Search title, actor, actress, director, plot..." class="w-full pl-10 pr-4 py-2.5 bg-black/70 border border-brand-border rounded-xl text-xs text-white focus:outline-none focus:border-brand-magenta transition">
+                </div>
+
+                <!-- Industry Filter -->
+                <select id="industry-filter" onchange="applyFilters()" class="bg-black/70 border border-brand-border text-xs text-gray-300 px-3 py-2.5 rounded-xl focus:outline-none focus:border-brand-magenta">
+                    <option value="ALL">All Global Industries (10+)</option>
+                    <option value="Hollywood">Hollywood (USA)</option>
+                    <option value="Bollywood">Bollywood (India)</option>
+                    <option value="Dhallywood">Dhallywood (Bangladesh)</option>
+                    <option value="Nollywood">Nollywood (Nigeria)</option>
+                    <option value="Korean K-Drama">Korean K-Drama / Cinema</option>
+                    <option value="Anime & Japanese">Anime & Japanese Cinema</option>
+                    <option value="European Cinema">European Cinema</option>
+                    <option value="Latin Cinema">Latin American Cinema</option>
+                </select>
+
+                <!-- Genre Filter -->
+                <select id="genre-filter" onchange="applyFilters()" class="bg-black/70 border border-brand-border text-xs text-gray-300 px-3 py-2.5 rounded-xl focus:outline-none focus:border-brand-magenta">
+                    <option value="ALL">All Genres</option>
+                    <option value="Sci-Fi Thriller">Sci-Fi Thriller</option>
+                    <option value="Action & Martial Arts">Action & Martial Arts</option>
+                    <option value="Cyberpunk Noir">Cyberpunk Noir</option>
+                    <option value="Historical Epic">Historical Epic</option>
+                    <option value="Psychological Drama">Psychological Drama</option>
+                    <option value="Romantic Drama">Romantic Drama</option>
+                    <option value="Supernatural Horror">Supernatural Horror</option>
+                    <option value="Crime & Heist">Crime & Heist</option>
+                </select>
+
+                <!-- Country Filter -->
+                <select id="country-filter" onchange="applyFilters()" class="bg-black/70 border border-brand-border text-xs text-gray-300 px-3 py-2.5 rounded-xl focus:outline-none focus:border-brand-magenta">
+                    <option value="ALL">All Countries</option>
+                    <option value="USA">United States</option>
+                    <option value="India">India</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="South Korea">South Korea</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="France">France</option>
+                </select>
+
+            </div>
+        </div>
+
+        <!-- Pagination & Counter Stats -->
+        <div class="flex flex-wrap items-center justify-between gap-4 font-mono text-xs px-2">
+            <div class="flex items-center space-x-2 text-gray-400">
+                <span>INDEXED FILMS:</span>
+                <span id="visible-count" class="text-brand-magenta font-bold">0</span>
+                <span>/</span>
+                <span class="text-amber-400 font-bold">1,000 DEMO MOVIES</span>
+                <span class="text-gray-600">|</span>
+                <span>PAGE <span id="current-page-num" class="text-pink-400 font-bold">1</span> OF <span id="total-pages-num">50</span></span>
+            </div>
+
+            <!-- Page Navigation Buttons -->
+            <div class="flex items-center space-x-2">
+                <button onclick="changePage(-1)" id="prev-page-btn" class="px-4 py-1.5 bg-brand-card border border-brand-border hover:border-brand-magenta text-gray-300 rounded-lg transition disabled:opacity-40 disabled:pointer-events-none">&lt; PREV</button>
+                <button onclick="changePage(1)" id="next-page-btn" class="px-4 py-1.5 bg-brand-card border border-brand-border hover:border-brand-magenta text-gray-300 rounded-lg transition disabled:opacity-40 disabled:pointer-events-none">NEXT &gt;</button>
+            </div>
+        </div>
+
+        <div id="movies-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <!-- Dynamic Movie Cards injected via JavaScript -->
+        </div>
+
+    </main>
+
+    <div id="player-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-6 hidden overflow-y-auto">
+        <div class="bg-brand-dark border border-brand-border rounded-2xl max-w-5xl w-full p-4 sm:p-6 space-y-4 relative shadow-2xl">
+            
+            <!-- Close Modal -->
+            <button onclick="closePlayerModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-magenta transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Video Header Info -->
+            <div id="player-header-info" class="border-b border-brand-border pb-3">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Custom Video Canvas / Screen Area -->
+            <div class="aspect-video bg-black rounded-xl overflow-hidden relative border border-brand-border flex flex-col justify-center items-center group">
+                
+                <!-- Buffering Spinner Overlay -->
+                <div id="buffering-overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center space-y-3 z-20">
+                    <div class="w-12 h-12 border-4 border-brand-magenta border-t-amber-400 rounded-full animate-spin"></div>
+                    <div class="text-xs font-mono text-amber-400 animate-pulse">BUFFERING HIGH-BITRATE STREAM... (1080p 60FPS)</div>
+                </div>
+
+                <!-- Canvas Visualizer / Video Simulator -->
+                <canvas id="video-canvas" class="w-full h-full object-cover"></canvas>
+
+                <!-- On-Screen Custom Controls HUD -->
+                <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 space-y-3 font-mono opacity-90 group-hover:opacity-100 transition">
+                    
+                    <!-- Seek Bar -->
+                    <div class="flex items-center space-x-3">
+                        <span id="current-time-display" class="text-[10px] text-gray-400">00:00</span>
+                        <input type="range" id="seek-bar" value="0" max="100" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-500">
+                        <span id="total-time-display" class="text-[10px] text-gray-400">02:15:00</span>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="togglePlayPause()" id="play-pause-btn" class="p-2 bg-brand-magenta/20 hover:bg-brand-magenta/30 text-brand-magenta border border-brand-magenta/50 rounded-lg">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="rewindVideo(10)" class="p-2 bg-black/60 hover:bg-gray-800 text-gray-300 rounded-lg">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="forwardVideo(10)" class="p-2 bg-black/60 hover:bg-gray-800 text-gray-300 rounded-lg">
+                                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <!-- Audio Equalizer & Resolution Controls -->
+                        <div class="flex items-center space-x-3 text-[11px]">
+                            <!-- Equalizer Preset -->
+                            <select id="audio-eq-select" class="bg-black/80 border border-brand-border text-gray-300 px-2 py-1 rounded">
+                                <option value="flat">Audio EQ: Cinema Flat</option>
+                                <option value="bass">Audio EQ: Bass Boost 7.1</option>
+                                <option value="vocal">Audio EQ: Dialogue Clear</option>
+                            </select>
+
+                            <!-- Quality Selector -->
+                            <select class="bg-black/80 border border-brand-border text-amber-400 px-2 py-1 rounded">
+                                <option>4K Ultra HD (60Mbps)</option>
+                                <option selected>1080p Full HD</option>
+                                <option>720p HD</option>
+                            </select>
+
+                            <!-- Subtitles -->
+                            <select class="bg-black/80 border border-brand-border text-pink-400 px-2 py-1 rounded">
+                                <option>Subtitles: Off</option>
+                                <option selected>Subtitles: English [CC]</option>
+                                <option>Subtitles: Spanish</option>
+                                <option>Subtitles: Bengali</option>
+                                <option>Subtitles: Korean</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Pay-Per-Minute Rental Telemetry & PDF Receipt Action -->
+            <div class="flex flex-wrap items-center justify-between gap-3 font-mono text-xs border-t border-brand-border pt-3">
+                <div class="flex items-center space-x-3 text-gray-400">
+                    <span>RENTAL STATUS: <span id="rental-active-status" class="text-emerald-400 font-bold">ACTIVE (0.5 TOKENS/MIN)</span></span>
+                    <span>|</span>
+                    <span>ELAPSED: <span id="rental-elapsed-time" class="text-amber-400 font-bold">00:03:12</span></span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <button onclick="generateRentalReceiptPDF()" class="px-4 py-2 bg-brand-pink/20 hover:bg-brand-pink/30 border border-brand-pink/50 text-brand-pink font-bold rounded-lg transition flex items-center space-x-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span>EXPORT RENTAL RECEIPT PDF</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="token-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-brand-dark border border-brand-border rounded-2xl max-w-md w-full p-6 space-y-5 relative shadow-2xl">
+            <button onclick="closeTokenModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-magenta transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 border-b border-brand-border pb-3">
+                <div class="p-2 bg-amber-500/20 text-amber-400 rounded-lg">
+                    <i data-lucide="coins" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-mono font-bold text-lg text-white">NEXUS TOKEN WALLET</h3>
+                    <p class="text-xs text-gray-400">Buy viewing credits for minute/hour based rentals</p>
+                </div>
+            </div>
+
+            <!-- Token Purchase Packages -->
+            <div class="space-y-3 font-mono text-xs">
+                <div onclick="addTokens(100, 5)" class="p-3 bg-brand-card border border-brand-border hover:border-amber-400 rounded-xl cursor-pointer transition flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-amber-400">100 NEX TOKENS</div>
+                        <div class="text-[10px] text-gray-400">~ 200 Minutes HD Streaming</div>
+                    </div>
+                    <span class="px-3 py-1 bg-amber-500/20 text-amber-300 font-bold rounded border border-amber-500/30">$5.00 USD</span>
+                </div>
+
+                <div onclick="addTokens(500, 20)" class="p-3 bg-brand-card border border-brand-border hover:border-brand-magenta rounded-xl cursor-pointer transition flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-brand-magenta">500 NEX TOKENS</div>
+                        <div class="text-[10px] text-gray-400">~ 1,000 Minutes 4K Ultra HD Stream</div>
+                    </div>
+                    <span class="px-3 py-1 bg-brand-magenta/20 text-brand-magenta font-bold rounded border border-brand-magenta/30">$20.00 USD</span>
+                </div>
+
+                <div onclick="addTokens(1500, 50)" class="p-3 bg-brand-card border border-brand-border hover:border-pink-500 rounded-xl cursor-pointer transition flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-pink-400">1,500 NEX VIP PACK</div>
+                        <div class="text-[10px] text-gray-400">Unlimited 30-Day Pay-Per-View Access</div>
+                    </div>
+                    <span class="px-3 py-1 bg-pink-500/20 text-pink-300 font-bold rounded border border-pink-500/30">$50.00 USD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="subscription-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-brand-dark border border-brand-border rounded-2xl max-w-2xl w-full p-6 space-y-6 relative shadow-2xl">
+            <button onclick="closeSubscriptionModal()" class="absolute top-4 right-4 text-gray-400 hover:text-brand-magenta transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div class="border-b border-brand-border pb-3">
+                <h3 class="font-mono font-bold text-xl text-gradient">NEXUS GLOBAL SUBSCRIPTION PASSES</h3>
+                <p class="text-xs text-gray-400">Choose traditional monthly tiers or instant pay-per-minute streaming</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+                <!-- Basic -->
+                <div class="p-4 bg-brand-card border border-brand-border rounded-xl space-y-3 flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="font-bold text-gray-300 text-sm">BASIC PASS</div>
+                        <div class="text-lg font-bold text-white">$8.99 <span class="text-[10px] text-gray-500">/mo</span></div>
+                        <ul class="text-[10px] text-gray-400 space-y-1 pt-2">
+                            <li>• 720p HD Stream</li>
+                            <li>• 1 Device Simultaneously</li>
+                            <li>• Standard Audio EQ</li>
+                        </ul>
+                    </div>
+                    <button onclick="setSubscriptionTier('BASIC PASS')" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-white rounded font-bold">SELECT PASS</button>
+                </div>
+
+                <!-- Standard -->
+                <div class="p-4 bg-brand-card border border-brand-magenta rounded-xl space-y-3 flex flex-col justify-between relative glow-magenta">
+                    <div class="space-y-2">
+                        <span class="text-[9px] bg-brand-magenta text-black font-bold px-2 py-0.5 rounded absolute -top-2.5 right-3">POPULAR</span>
+                        <div class="font-bold text-brand-magenta text-sm">STANDARD PASS</div>
+                        <div class="text-lg font-bold text-white">$14.99 <span class="text-[10px] text-gray-500">/mo</span></div>
+                        <ul class="text-[10px] text-gray-400 space-y-1 pt-2">
+                            <li>• 1080p Full HD</li>
+                            <li>• 2 Devices Simultaneously</li>
+                            <li>• 7.1 Bass EQ Tuning</li>
+                        </ul>
+                    </div>
+                    <button onclick="setSubscriptionTier('STANDARD PASS')" class="w-full py-2 gradient-magenta-red text-white rounded font-bold">SELECT PASS</button>
+                </div>
+
+                <!-- VIP Pass -->
+                <div class="p-4 bg-brand-card border border-amber-400 rounded-xl space-y-3 flex flex-col justify-between">
+                    <div class="space-y-2">
+                        <div class="font-bold text-amber-400 text-sm">VIP ULTIMATE</div>
+                        <div class="text-lg font-bold text-white">$24.99 <span class="text-[10px] text-gray-500">/mo</span></div>
+                        <ul class="text-[10px] text-gray-400 space-y-1 pt-2">
+                            <li>• 4K HDR Ultra HD</li>
+                            <li>• 4 Devices + Token Bonus</li>
+                            <li>• All Global Cinema Unlocked</li>
+                        </ul>
+                    </div>
+                    <button onclick="setSubscriptionTier('VIP ULTIMATE')" class="w-full py-2 bg-amber-500/20 border border-amber-500 text-amber-300 rounded font-bold">SELECT PASS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Application State
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let activeMoviesData = [];
+        let filteredMoviesData = [];
+        let userTokenBalance = 250;
+        let selectedMovieForPlayer = null;
+        let isPlaying = false;
+        let rentalTimer = null;
+        let rentalElapsedSeconds = 0;
+
+        // Data Generation Arrays for 1000 Movies Database
+        const industries = [
+            { name: "Hollywood", country: "USA" },
+            { name: "Bollywood", country: "India" },
+            { name: "Dhallywood", country: "Bangladesh" },
+            { name: "Nollywood", country: "Nigeria" },
+            { name: "Korean K-Drama", country: "South Korea" },
+            { name: "Anime & Japanese", country: "Japan" },
+            { name: "European Cinema", country: "UK" },
+            { name: "Latin Cinema", country: "Mexico" }
+        ];
+
+        const genres = [
+            "Sci-Fi Thriller", "Action & Martial Arts", "Cyberpunk Noir", "Historical Epic",
+            "Psychological Drama", "Romantic Drama", "Supernatural Horror", "Crime & Heist"
+        ];
+
+        const actorsList = [
+            "Leonardo DiCaprio", "Shah Rukh Khan", "Shakib Khan", "Genevieve Naji", "Song Kang-ho",
+            "Ken Watanabe", "Cillian Murphy", "Penélope Cruz", "Denzel Washington", "Priyanka Chopra"
+        ];
+
+        const actressesList = [
+            "Scarlett Johansson", "Deepika Padukone", "Bubly", "Nse Ikpe-Etim", "Kim Tae-ri",
+            "Rinko Kikuchi", "Florence Pugh", "Salma Hayek", "Zendaya", "Alia Bhatt"
+        ];
+
+        const titlePrefixes = [
+            "The Last", "Shadow of", "Nexus:", "Chronicles of", "Beyond", "Imperial", "Cyber",
+            "Midnight in", "Whispering", "Echoes of", "Kingdom of", "Eternal", "Zero Point"
+        ];
+
+        const titleSuffixes = [
+            "Protocol", "Horizon", "Dhaka", "Seoul", "Vengeance", "Legacy", "Dynasty",
+            "Rising", "Matrix", "Reckoning", "Odyssey", "Labyrinth", "Frontier"
+        ];
+
+        function build1000MoviesDatabase() {
+            const db = [];
+            for (let i = 1; i <= 1000; i++) {
+                const indObj = industries[i % industries.length];
+                const genre = genres[i % genres.length];
+                const actor = actorsList[i % actorsList.length];
+                const actress = actressesList[(i * 3) % actressesList.length];
+                const prefix = titlePrefixes[i % titlePrefixes.length];
+                const suffix = titleSuffixes[(i * 2) % titleSuffixes.length];
+
+                const rating = (7.0 + (i % 30) / 10).toFixed(1);
+                const durationMinutes = 90 + (i % 60);
+
+                db.push({
+                    id: i,
+                    title: `${prefix} ${suffix} ${i > 500 ? '#' + i : ''}`.trim(),
+                    industry: indObj.name,
+                    country: indObj.country,
+                    genre: genre,
+                    actor: actor,
+                    actress: actress,
+                    rating: rating,
+                    duration: `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`,
+                    year: 2018 + (i % 8),
+                    description: `A cinematic masterpiece produced in ${indObj.country}. Highlighting ${actor} and ${actress} in an epic story of ${genre.toLowerCase()} navigating intense trials.`,
+                    imgUrl: `https://picsum.photos/seed/movie${i}/500/750`
+                });
+            }
+            return db;
+        }
+
+        // Initialize Database
+        activeMoviesData = build1000MoviesDatabase();
+        filteredMoviesData = [...activeMoviesData];
+
+        function applyFilters() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const industry = document.getElementById('industry-filter').value;
+            const genre = document.getElementById('genre-filter').value;
+            const country = document.getElementById('country-filter').value;
+
+            filteredMoviesData = activeMoviesData.filter(movie => {
+                const matchesSearch = movie.title.toLowerCase().includes(search) ||
+                                      movie.actor.toLowerCase().includes(search) ||
+                                      movie.actress.toLowerCase().includes(search) ||
+                                      movie.description.toLowerCase().includes(search);
+
+                const matchesIndustry = (industry === 'ALL') || (movie.industry === industry);
+                const matchesGenre = (genre === 'ALL') || (movie.genre === genre);
+                const matchesCountry = (country === 'ALL') || (movie.country === country);
+
+                return matchesSearch && matchesIndustry && matchesGenre && matchesCountry;
+            });
+
+            currentPage = 1;
+            renderPage();
+        }
+
+        function changePage(delta) {
+            const totalPages = Math.ceil(filteredMoviesData.length / itemsPerPage) || 1;
+            currentPage += delta;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            renderPage();
+        }
+
+        function renderPage() {
+            const totalPages = Math.ceil(filteredMoviesData.length / itemsPerPage) || 1;
+            document.getElementById('visible-count').innerText = filteredMoviesData.length.toLocaleString();
+            document.getElementById('current-page-num').innerText = currentPage;
+            document.getElementById('total-pages-num').innerText = totalPages;
+
+            document.getElementById('prev-page-btn').disabled = (currentPage === 1);
+            document.getElementById('next-page-btn').disabled = (currentPage === totalPages);
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const pageData = filteredMoviesData.slice(startIdx, startIdx + itemsPerPage);
+
+            const grid = document.getElementById('movies-grid');
+            if (pageData.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500 font-mono">No movies matching selected criteria.</div>`;
+                return;
+            }
+
+            grid.innerHTML = pageData.map(movie => `
+                <div class="bg-brand-card border border-brand-border rounded-xl overflow-hidden card-glow flex flex-col justify-between group">
+                    <div class="relative aspect-[2/3] bg-black overflow-hidden">
+                        <img src="${movie.imgUrl}" alt="${movie.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onerror="this.src='https://placehold.co/500x750/16101d/d946ef?text=Movie+${movie.id}'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-brand-card via-transparent to-transparent"></div>
+                        <div class="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-amber-400 border border-amber-500/30 flex items-center space-x-1">
+                            <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                            <span>${movie.rating}</span>
+                        </div>
+                        <div class="absolute top-2 right-2 px-2 py-0.5 rounded bg-brand-magenta/80 text-[10px] font-mono text-white font-bold">
+                            ${movie.industry}
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-2 flex-1 flex flex-col justify-between font-mono">
+                        <div>
+                            <div class="text-[10px] text-pink-400 uppercase font-bold">${movie.genre} • ${movie.year}</div>
+                            <h3 class="text-sm font-bold text-white line-clamp-1 group-hover:text-brand-magenta transition">${movie.title}</h3>
+                            <p class="text-[11px] text-gray-400 line-clamp-2 mt-1 font-sans">${movie.description}</p>
+                        </div>
+
+                        <div class="pt-2 border-t border-brand-border text-[10px] text-gray-400 space-y-1">
+                            <div><span class="text-gray-500">Stars:</span> ${movie.actor}, ${movie.actress}</div>
+                            <div><span class="text-gray-500">Duration:</span> ${movie.duration}</div>
+                        </div>
+
+                        <button onclick="launchPlayer(${movie.id})" class="w-full py-2 mt-2 gradient-magenta-red hover:opacity-90 text-white font-bold text-xs rounded-lg transition flex items-center justify-center space-x-1.5 shadow-md">
+                            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                            <span>PLAY / RENTAL (0.5 NEX/MIN)</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function launchPlayer(id) {
+            const movie = activeMoviesData.find(m => m.id === id);
+            if (!movie) return;
+
+            if (userTokenBalance < 5) {
+                alert("Insufficient NEX Tokens to launch Pay-Per-Minute Rental. Please top up tokens.");
+                openTokenModal();
+                return;
+            }
+
+            selectedMovieForPlayer = movie;
+
+            // Render Header
+            document.getElementById('player-header-info').innerHTML = `
+                <div class="flex items-center justify-between font-mono">
+                    <div>
+                        <span class="text-xs text-brand-magenta font-bold">${movie.industry} STREAMING // ID #${movie.id}</span>
+                        <h2 class="text-xl font-bold text-white">${movie.title}</h2>
+                        <div class="text-xs text-gray-400 font-sans">${movie.genre} • ${movie.country} • Lead: ${movie.actor} & ${movie.actress}</div>
+                    </div>
+                    <div class="text-right text-xs">
+                        <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">4K ENCODED</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('player-modal').classList.remove('hidden');
+
+            // Simulate Buffering
+            document.getElementById('buffering-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('buffering-overlay').classList.add('hidden');
+                startVideoCanvasAnimation();
+                startRentalTimer();
+            }, 1200);
+
+            lucide.createIcons();
+        }
+
+        function closePlayerModal() {
+            document.getElementById('player-modal').classList.add('hidden');
+            stopRentalTimer();
+        }
+
+        // Simulated Video Canvas Rendering
+        const canvas = document.getElementById('video-canvas');
+        const ctx = canvas.getContext('2d');
+        let animFrameId = null;
+        let particleStep = 0;
+
+        function startVideoCanvasAnimation() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            function animate() {
+                ctx.fillStyle = '#070508';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Animated Color Equalizer Visualizer
+                const bars = 32;
+                const barWidth = canvas.width / bars;
+
+                for (let i = 0; i < bars; i++) {
+                    const barHeight = Math.sin((i + particleStep) * 0.2) * (canvas.height / 3) + (canvas.height / 3);
+                    const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                    gradient.addColorStop(0, '#e11d48');
+                    gradient.addColorStop(0.5, '#d946ef');
+                    gradient.addColorStop(1, '#eab308');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 4, barHeight);
+                }
+
+                // Center Watermark Title
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px JetBrains Mono';
+                ctx.textAlign = 'center';
+                if (selectedMovieForPlayer) {
+                    ctx.fillText(`STREAMING: ${selectedMovieForPlayer.title.toUpperCase()}`, canvas.width / 2, canvas.height / 2);
+                }
+
+                particleStep += 0.08;
+                animFrameId = requestAnimationFrame(animate);
+            }
+
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            animate();
+        }
+
+        // Rental Timer Logic
+        function startRentalTimer() {
+            rentalElapsedSeconds = 0;
+            if (rentalTimer) clearInterval(rentalTimer);
+
+            rentalTimer = setInterval(() => {
+                rentalElapsedSeconds++;
+                const mins = String(Math.floor(rentalElapsedSeconds / 60)).padStart(2, '0');
+                const secs = String(rentalElapsedSeconds % 60).padStart(2, '0');
+                document.getElementById('rental-elapsed-time').innerText = `00:${mins}:${secs}`;
+
+                // Deduct 0.5 Tokens every minute
+                if (rentalElapsedSeconds % 60 === 0) {
+                    userTokenBalance = Math.max(0, userTokenBalance - 0.5);
+                    document.getElementById('user-token-balance').innerText = `${userTokenBalance} NEX`;
+                }
+            }, 1000);
+        }
+
+        function stopRentalTimer() {
+            if (rentalTimer) clearInterval(rentalTimer);
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('play-pause-btn');
+            btn.innerHTML = isPlaying ? `<i data-lucide="pause" class="w-4 h-4"></i>` : `<i data-lucide="play" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+        }
+
+        function rewindVideo(sec) {
+            alert(`Rewound ${sec} seconds.`);
+        }
+
+        function forwardVideo(sec) {
+            alert(`Fast forwarded ${sec} seconds.`);
+        }
+
+        function openTokenModal() {
+            document.getElementById('token-modal').classList.remove('hidden');
+        }
+
+        function closeTokenModal() {
+            document.getElementById('token-modal').classList.add('hidden');
+        }
+
+        function addTokens(amount, price) {
+            userTokenBalance += amount;
+            document.getElementById('user-token-balance').innerText = `${userTokenBalance} NEX`;
+            alert(`Successfully added ${amount} NEX Tokens to wallet for $${price} USD!`);
+            closeTokenModal();
+        }
+
+        function openSubscriptionModal() {
+            document.getElementById('subscription-modal').classList.remove('hidden');
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById('subscription-modal').classList.add('hidden');
+        }
+
+        function setSubscriptionTier(tierName) {
+            document.getElementById('user-subscription-tier').innerText = tierName;
+            alert(`Subscription updated to ${tierName}! All feature benefits unlocked.`);
+            closeSubscriptionModal();
+        }
+
+        // Export PDF Receipt
+        function generateRentalReceiptPDF() {
+            if (!selectedMovieForPlayer) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFillColor(7, 5, 8);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setTextColor(217, 70, 239);
+            doc.setFont("courier", "bold");
+            doc.setFontSize(16);
+            doc.text("NETFLIX // NEXUS 1000 — RENTAL RECEIPT", 15, 20);
+
+            doc.setTextColor(248, 250, 252);
+            doc.setFontSize(10);
+            doc.text(`Film Title: ${selectedMovieForPlayer.title}`, 15, 32);
+            doc.text(`Industry: ${selectedMovieForPlayer.industry} (${selectedMovieForPlayer.country})`, 15, 40);
+            doc.text(`Elapsed Streaming Time: ${document.getElementById('rental-elapsed-time').innerText}`, 15, 48);
+            doc.text(`Rental Rate: 0.5 NEX Tokens / Minute`, 15, 56);
+            doc.text(`Remaining Wallet Balance: ${userTokenBalance} NEX Tokens`, 15, 64);
+
+            doc.setDrawColor(225, 29, 72);
+            doc.line(15, 72, 195, 72);
+
+            doc.save(`Nexus_Rental_Receipt_Film_${selectedMovieForPlayer.id}.pdf`);
+        }
+
+        // Self-Code Exporter Button
+        function downloadSelfCode() {
+            const sourceCode = document.documentElement.outerHTML;
+            const blob = new Blob([sourceCode], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Netflix_Nexus_1000_Cinema_Platform.html';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Page Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPage();
+        });
+    </script>
+</body>
+</html>
